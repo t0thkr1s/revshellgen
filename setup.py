@@ -5,5 +5,5 @@ setup(
     version='1.0',
     author='Kristof Toth',
     author_email='tothkrisi@gmail.com',
-    description='', install_requires=['pyperclip', 'colorama', 'nclib']
+    description='', install_requires=['pyperclip', 'colorama']
 )
