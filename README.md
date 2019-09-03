@@ -2,6 +2,8 @@
 
 Standalone python script for generating reverse shells easily and automating the boring stuff like URL encoding the command and setting up a listener.
 
+![Screenshot](screenshots/screenshot_12.06.42.png)
+
 ## Download
 
 ```
