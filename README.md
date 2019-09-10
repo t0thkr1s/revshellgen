@@ -12,7 +12,7 @@ git clone https://github.com/t0thkr1s/revshellgen
 
 ## Install
 
-The script has 2 dependencies:
+The script has 3 dependencies:
 
 *   [pyperclip](https://pypi.org/project/pyperclip/)
 *   [colorama](https://pypi.org/project/colorama/)
