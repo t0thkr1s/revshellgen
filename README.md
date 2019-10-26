@@ -1,8 +1,14 @@
 # revshellgen
 
+[![made-with-python](http://forthebadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
+[![built-with-love](http://forthebadge.com/images/badges/built-with-love.svg)](https://gitHub.com/t0thkr1s/)
+
 Standalone python script for generating reverse shells easily and automating the boring stuff like URL encoding the command and setting up a listener.
 
-![Screenshot](screenshots/screenshot_2019-09-10.png)
+Screeenshot 1             |  Screenshot 2
+:-------------------------:|:-------------------------:
+![](screenshots/screenshot_2019-10-26_1.png)  |  ![](screenshots/screenshot_2019-10-26_2.png)
+
 
 ## Download
 
@@ -12,11 +18,12 @@ git clone https://github.com/t0thkr1s/revshellgen
 
 ## Install
 
-The script has 3 dependencies:
+The script has 4 dependencies:
 
 *   [pyperclip](https://pypi.org/project/pyperclip/)
 *   [colorama](https://pypi.org/project/colorama/)
 *   [readchar](https://pypi.org/project/readchar/)
+*   [netifaces](https://pypi.org/project/netifaces/)
 
 You can install these by typing:
 
