@@ -191,8 +191,8 @@ def setup_listener():
     options = ['no', 'yes']
     result = select(options)
     if result == 1:
-        print('\n' + success + 'Waiting for incoming connections...')
-        os.system('ncat -lp ' + str(port))
+        print('\n' + information + 'Launching /usr/bin/ncat ...' + '\n')
+        os.system('/usr/bin/ncat -nlvp ' + str(port))
     else:
         exit_program()
 
