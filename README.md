@@ -3,12 +3,8 @@
 [![made-with-python](http://forthebadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 [![built-with-love](http://forthebadge.com/images/badges/built-with-love.svg)](https://gitHub.com/t0thkr1s/)
 
-Standalone script written in Python 3 for generating reverse shells easily without typing. It automates the boring stuff like URL encoding the command and setting up a listener.
-
-Screenshot 1             |  Screenshot 2
-:-----------------------:|:-----------------------:
-![](screenshots/screenshot_2019-10-26_1.png)  |  ![](screenshots/screenshot_2019-10-26_2.png)
-
+Standalone script written in Python 3 for generating reverse shells easily without typing. 
+It automates the boring stuff like URL encoding the command and setting up a listener.
 
 ## Download
 
@@ -30,6 +26,18 @@ You can install these by typing:
 ```
 python3 setup.py install
 ```
+
+## Run
+
+```
+python3 revshellgen.py
+```
+
+## Screenshots
+
+Screenshot 1             |  Screenshot 2
+:-----------------------:|:-----------------------:
+![Screenshot1](https://i.imgur.com/foGaIT6.png)  |  ![Screenshot2](https://i.imgur.com/BEyYcDw.png)
 
 ### Disclaimer
 
