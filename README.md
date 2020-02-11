@@ -37,7 +37,7 @@ python3 revshellgen.py
 
 Screenshot 1             |  Screenshot 2
 :-----------------------:|:-----------------------:
-![Screenshot1](https://i.imgur.com/foGaIT6.png)  |  ![Screenshot2](https://i.imgur.com/BEyYcDw.png)
+![Screenshot1](https://i.imgur.com/OBWE1KA.png)  |  ![Screenshot2](https://i.imgur.com/xJZ1sHB.png)
 
 ### Disclaimer
 
