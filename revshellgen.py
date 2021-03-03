@@ -78,7 +78,7 @@ def select(
                 new_index += 1
                 selected_index = new_index
                 break
-        elif keypress == readchar.key.ENTER:
+        elif keypress == '\n':
             break
         elif keypress == readchar.key.CTRL_C:
             raise KeyboardInterrupt
