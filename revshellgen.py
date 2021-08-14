@@ -2,6 +2,7 @@
 # coding=utf-8
 import ipaddress
 import os
+import sys
 import urllib.parse
 from string import Template
 from typing import List
@@ -34,7 +35,7 @@ ip = port = shell = command = ''
 
 choices = ['no', 'yes']
 shells = ['/bin/sh', '/bin/bash', '/bin/zsh', '/bin/ksh', '/bin/tcsh', '/bin/dash']
-commands = sorted([command for command in os.listdir('commands')])
+commands = sorted([command for command in os.listdir(sys.path[0] + '/commands')])
 
 
 def print_banner():
