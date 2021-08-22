@@ -139,7 +139,7 @@ def select_shell():
 
 def build_command():
     global command
-    with open('commands/' + command) as f:
+    with open(sys.path[0] + '/commands/' + command) as f:
         command = Template(f.read())
     command = command.safe_substitute(ip=ip, port=port, shell=shell)
     print(header.safe_substitute(text='URL ENCODE'))
