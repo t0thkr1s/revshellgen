@@ -2,6 +2,7 @@
 # coding=utf-8
 import ipaddress
 import os
+import sys
 import urllib.parse
 from string import Template
 from typing import List 
@@ -79,7 +80,7 @@ def select(
                 new_index += 1
                 selected_index = new_index
                 break
-        elif keypress == '\n':
+        elif keypress == readchar.key.ENTER or keypress == '\n':
             break
         elif keypress == readchar.key.CTRL_C:
             raise KeyboardInterrupt
