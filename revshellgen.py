@@ -6,7 +6,6 @@ import sys
 import urllib.parse
 from string import Template
 from typing import List 
-import sys
 
 import readchar
 from colorama import Fore, Style
