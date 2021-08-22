@@ -4,7 +4,8 @@ import ipaddress
 import os
 import urllib.parse
 from string import Template
-from typing import List
+from typing import List 
+import sys
 
 import readchar
 from colorama import Fore, Style
@@ -34,7 +35,7 @@ ip = port = shell = command = ''
 
 choices = ['no', 'yes']
 shells = ['/bin/sh', '/bin/bash', '/bin/zsh', '/bin/ksh', '/bin/tcsh', '/bin/dash']
-commands = sorted([command for command in os.listdir('commands')])
+commands = sorted([command for command in os.listdir(sys.path[0] + '/commands')])
 
 
 def print_banner():
@@ -138,7 +139,8 @@ def select_shell():
 
 def build_command():
     global command
-    with open('commands/' + command) as f:
+    with open(sys.path[0] + '/commands/' + command) as f:
+    #with open('/home/jrz/Tools/revshellgen/commands/' + command) as f:
         command = Template(f.read())
     command = command.safe_substitute(ip=ip, port=port, shell=shell)
     print(header.safe_substitute(text='URL ENCODE'))
