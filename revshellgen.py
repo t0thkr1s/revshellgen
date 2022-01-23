@@ -3,7 +3,8 @@
 import ipaddress
 import os
 import sys
-import urllib.parse
+import urllib.parse 
+import base64
 from string import Template
 from typing import List 
 
@@ -33,7 +34,8 @@ fail = Template(Style.BRIGHT + '[' + Fore.RED + ' - ' + Fore.RESET + '] ' + Styl
 
 ip = port = shell = command = ''
 
-choices = ['no', 'yes']
+encode_types = ['NONE', 'URL ENCODE', 'BASE64 ENCODE']
+setup_or_not = ["yes","no"]
 shells = ['/bin/sh', '/bin/bash', '/bin/zsh', '/bin/ksh', '/bin/tcsh', '/bin/dash']
 commands = sorted([command for command in os.listdir(sys.path[0] + '/commands')])
 
@@ -140,13 +142,17 @@ def select_shell():
 def build_command():
     global command
     with open(sys.path[0] + '/commands/' + command) as f:
-    #with open('/home/jrz/Tools/revshellgen/commands/' + command) as f:
         command = Template(f.read())
     command = command.safe_substitute(ip=ip, port=port, shell=shell)
-    print(header.safe_substitute(text='URL ENCODE'))
-    if select(choices) == 1:
+    #print(header.safe_substitute(text='URL ENCODE'))
+    print(header.safe_substitute(text='SELECT ENCODE TYPE'))
+    selected_encode_type = select(encode_types)
+    if selected_encode_type == 1:
         command = urllib.parse.quote_plus(command)
         print(info.safe_substitute(text='Command is now URL encoded!'))
+    if selected_encode_type == 2:
+        command = base64.b64encode(command.encode()).decode()
+        print(info.safe_substitute(text='Command is now BASE64 encoded!'))
 
     print(header.safe_substitute(text='FINISHED COMMAND'))
     print(code.safe_substitute(code=command) + '\n')
@@ -162,7 +168,7 @@ def build_command():
 def setup_listener():
     if os.name != 'nt':
         print(header.safe_substitute(text='SETUP LISTENER'))
-        if select(choices) == 1:
+        if select(setup_or_not) == 0:
             os.system('\n$(which ncat || which nc) -nlvp ' + port)
         else:
             exit_program()
