@@ -155,6 +155,10 @@ def select_command():
     global command
     command = commands[select(commands)]
 
+def select_manage_firewall_iptables():
+    print(header.safe_substitute(text='SELECT FIREWALL'))
+    print(info.safe_substitute(text='Do you want to enable automanage of iptables?'))
+    return choices[select(choices)]
 
 def select_shell():
     if command != 'windows_powershell' and command != 'unix_bash' and command != 'unix_telnet':
@@ -262,7 +266,15 @@ if __name__ == '__main__':
     try:
         specify_ip()
         specify_port()
-        test_specified_port_inbound_firewall_localhost()
+        if select_manage_firewall_iptables() == 'yes': 
+            #print info message if user wants to manage firewall with iptables 'automatic management of iptables enabled' in green colors 
+            print(info.safe_substitute(text=Fore.GREEN + 'automatic management of iptables enabled')) 
+            print(Fore.RESET)
+            test_specified_port_inbound_firewall_localhost()
+        else:
+            #print info message if user wants to manage firewall with iptables 'automatic management of iptables disabled' in red colors
+            print(info.safe_substitute(text=Fore.RED + 'automatic management of iptables disabled'))
+            print(Fore.RESET)
         select_command()
         select_shell()
         select_base64_encoding()
