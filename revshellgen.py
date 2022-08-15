@@ -40,8 +40,28 @@ commands = sorted([command for command in os.listdir(sys.path[0] + '/commands')]
 
 def print_banner():
     os.system('cls' if os.name == 'nt' else 'clear')
-    print(banner)
 
+    # not just print(banner)
+    # print banner with rainbow colors
+    for i in range(len(banner)):
+        # use lolcal colors
+        if i % 2 == 0:
+            print(Fore.RED + banner[i], end='')
+        elif i % 3 == 0:
+            print(Fore.GREEN + banner[i], end='')
+        elif i % 5 == 0:
+            print(Fore.BLUE + banner[i], end='')
+        elif i % 7 == 0:
+            print(Fore.CYAN + banner[i], end='')
+        elif i % 11 == 0:
+            print(Fore.MAGENTA + banner[i], end='')
+        elif i % 13 == 0:
+            print(Fore.YELLOW + banner[i], end='')
+        elif i % 17 == 0:
+            print(Fore.WHITE + banner[i], end='')
+        else:
+            print(Fore.RESET + banner[i], end='')
+    print(Fore.RESET)
 
 def is_valid(ip_address):
     try:
