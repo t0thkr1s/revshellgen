@@ -5,13 +5,11 @@ import base64
 import cryptography
 from cryptography.fernet import Fernet
 import gzip
-import tarfile
+#import tarfile
 import string
-import sh
+#import sh
 import bz2
 import lzma
-import zlib
-import lz4
 import random
 import ipaddress
 import os
