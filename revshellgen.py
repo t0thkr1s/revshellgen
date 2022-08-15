@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # coding=utf-8
+import base64
 import ipaddress
 import os
 import sys
@@ -31,7 +32,7 @@ success = Template(Style.BRIGHT + '[' + Fore.GREEN + ' + ' + Fore.RESET + '] ' +
 info = Template(Style.BRIGHT + '[' + Fore.YELLOW + ' ! ' + Fore.RESET + '] ' + Style.RESET_ALL + '$text')
 fail = Template(Style.BRIGHT + '[' + Fore.RED + ' - ' + Fore.RESET + '] ' + Style.RESET_ALL + '$text')
 
-ip = port = shell = command = ''
+ip = port = shell = command = base64_encoding = ''
 
 choices = ['no', 'yes']
 shells = ['/bin/sh', '/bin/bash', '/bin/zsh', '/bin/ksh', '/bin/tcsh', '/bin/dash']
@@ -156,6 +157,10 @@ def select_shell():
         global shell
         shell = shells[(select(shells))]
 
+def select_base64_encoding():
+    print(header.safe_substitute(text='SELECT BASE64 ENCODING'))
+    global base64_encoding
+    base64_encoding = choices[(select(choices))]
 
 def build_command():
     global command
@@ -166,6 +171,15 @@ def build_command():
     if select(choices) == 1:
         command = urllib.parse.quote_plus(command)
         print(info.safe_substitute(text='Command is now URL encoded!'))
+
+    # base64 encode of command if base64_encoding is 'yes'
+    if base64_encoding == 'yes':
+        command = base64.b64encode(command.encode()).decode()
+        print(info.safe_substitute(text='Command is now base64 encoded!'))
+    # if base64_encoding is 'no' do nothing, print command as is without base64 encoding
+    else:
+        print(info.safe_substitute(text='Command is not base64 encoded!'))
+    
 
     print(header.safe_substitute(text='FINISHED COMMAND'))
     print(code.safe_substitute(code=command) + '\n')
@@ -194,6 +208,7 @@ if __name__ == '__main__':
         specify_port()
         select_command()
         select_shell()
+        select_base64_encoding()
         build_command()
         setup_listener()
     except KeyboardInterrupt:
