@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # coding=utf-8
 import base64
+import cryptography
+import sh
 import ipaddress
 import os
 import sys
@@ -162,6 +164,18 @@ def select_base64_encoding():
     global base64_encoding
     base64_encoding = choices[(select(choices))]
 
+def test_specified_port_inbound_firewall_localhost():
+    print(header.safe_substitute(text='TEST SPECIFIED PORT INBOUND FIREWALL ON LOCALHOST'))
+    try:
+        subprocess.run(['iptables', '-A', 'INPUT', '-p', 'tcp', '--dport', port, '-j', 'ACCEPT'], check=True)
+        print(success.safe_substitute(text='Port ' + port + ' is open on localhost'))
+    except subprocess.CalledProcessError:
+        print(fail.safe_substitute(text='Port ' + port + ' is not open on localhost'))
+        # display error message 'Port is not open on localhost, so you can\'t use it' in red color with system to terminal
+        print(Fore.RED + 'Port ' + port + ' is not open on localhost, so you can\'t use it')
+        print(Fore.RESET)
+        exit(1)
+
 def build_command():
     global command
     with open(sys.path[0] + '/commands/' + command) as f:
@@ -206,6 +220,7 @@ if __name__ == '__main__':
     try:
         specify_ip()
         specify_port()
+        test_specified_port_inbound_firewall_localhost()
         select_command()
         select_shell()
         select_base64_encoding()
