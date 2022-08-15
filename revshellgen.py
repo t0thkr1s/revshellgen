@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # coding=utf-8
+import subprocess
 import base64
 import cryptography
 import sh
