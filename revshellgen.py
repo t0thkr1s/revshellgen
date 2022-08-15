@@ -3,7 +3,9 @@
 import subprocess
 import base64
 import cryptography
+import string
 import sh
+import random
 import ipaddress
 import os
 import sys
@@ -168,15 +170,54 @@ def select_base64_encoding():
 def test_specified_port_inbound_firewall_localhost():
     print(header.safe_substitute(text='TEST SPECIFIED PORT INBOUND FIREWALL ON LOCALHOST'))
     try:
-        subprocess.run(['iptables', '-A', 'INPUT', '-p', 'tcp', '--dport', port, '-j', 'ACCEPT'], check=True)
-        print(success.safe_substitute(text='Port ' + port + ' is open on localhost'))
-    except subprocess.CalledProcessError:
-        print(fail.safe_substitute(text='Port ' + port + ' is not open on localhost'))
-        # display error message 'Port is not open on localhost, so you can\'t use it' in red color with system to terminal
-        print(Fore.RED + 'Port ' + port + ' is not open on localhost, so you can\'t use it')
+        random_tmp_name = ""
+        # generate random name to the string random_tmp_name
+        for i in range(10):
+            random_tmp_name += random.choice(string.ascii_letters + string.digits)
+        # create temporary file with random name
+        with open("/tmp/"+random_tmp_name, 'w') as tmp_file:
+            pass
+
+        # check if iptables is installed with apt-get --list-installed
+        # command is 'apt list --installed 2>/dev/null | grep "iptables" | wc -l > /tmp/{random_tmp_name}' and returns 1 if installed
+        # command executed by os.system()
+        os.system('apt list --installed 2>/dev/null | grep "iptables" | wc -l > /tmp/'+random_tmp_name)
+        # read from temporary file
+        with open("/tmp/"+random_tmp_name, 'r') as tmp_file:
+            iptables_installed = int(tmp_file.read())
+            tmp_file.close()
+        # remove temporary file
+        os.remove("/tmp/"+random_tmp_name)
+        if iptables_installed == 1:
+            # print info message iptables is installed
+            print(info.safe_substitute(text='iptables is installed'))
+        try:
+            subprocess.run(['sudo', 'iptables', '-A', 'INPUT', '-p', 'tcp', '--dport', port, '-j', 'ACCEPT'], check=True)
+            print(success.safe_substitute(text='Port ' + port + ' is now open on localhost'))
+        except subprocess.CalledProcessError:
+            # print error message if iptables fails to add rule
+            print(fail.safe_substitute(text='Failed to add rule to iptables'))
+            try:
+                # check if iptables have rules for specified port
+                subprocess.run(['sudo', 'iptables', '-L', 'INPUT', '-n', '-v', '-x', '-t', 'filter', '-p', 'tcp', '--dport', port], check=True)
+                # print info message iptables have rules for specified port
+                print(info.safe_substitute(text='iptables have rules for specified port'))
+                print(success.safe_substitute(text='Port ' + port + ' is now open on localhost'))
+            except:
+                # print fail message iptables have no rules for specified port
+                print(fail.safe_substitute(text='iptables have no rules for specified port'))
+                print(fail.safe_substitute(text='Port ' + port + ' is not open on localhost'))
+                # display error message 'Port is not open on localhost, so you can\'t use it' in red color with system to terminal
+                print(Fore.RED + 'Port ' + port + ' is not open on localhost, so you can\'t use it')
+                print(Fore.RESET)
+                exit(1)    
+    except:
+        print(fail.safe_substitute(text='iptables is not installed!'))
+        # display error message 'iptables is not installed on localhost, so you can\'t use it' in red color with system to terminal
+        print(Fore.RED + 'iptables is not installed on localhost, so you can\'t use it')
         print(Fore.RESET)
         exit(1)
-
+    
 def build_command():
     global command
     with open(sys.path[0] + '/commands/' + command) as f:
