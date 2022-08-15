@@ -357,6 +357,8 @@ def build_command():
         print(info.safe_substitute(text='Command is now base64 encoded!'))
     # if base64_encoding is 'no' do nothing, print command as is without base64 encoding
     else:
+        if isinstance(command, bytes):
+            command = command.decode() 
         print(info.safe_substitute(text='Command is not base64 encoded!'))
 
     print(header.safe_substitute(text='FINISHED COMMAND'))
