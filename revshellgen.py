@@ -144,7 +144,6 @@ def build_command():
     with open(sys.path[0] + '/commands/' + command) as f:
         command = Template(f.read())
     command = command.safe_substitute(ip=ip, port=port, shell=shell)
-    #print(header.safe_substitute(text='URL ENCODE'))
     print(header.safe_substitute(text='SELECT ENCODE TYPE'))
     selected_encode_type = select(encode_types)
     if selected_encode_type == 1:
