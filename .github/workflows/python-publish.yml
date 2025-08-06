@@ -1,58 +1,18 @@
-name: Build and Publish to PyPI
+name: Publish to PyPI
 
 on:
-  push:
-    branches: [ master, main ]
-    tags:
-      - 'v*'  # Trigger on version tags like v2.0.0
-  pull_request:
-    branches: [ master, main ]
+  release:
+    types: [published]
   workflow_dispatch:  # Allow manual triggering
 
 jobs:
-  test:
-    name: Test Package
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov flake8
-    
-    - name: Lint with flake8
-      run: |
-        # Stop build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.git,__pycache__,build,dist
-        # Exit-zero treats all errors as warnings
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=.git,__pycache__,build,dist
-    
-    - name: Test package import
-      run: |
-        python -c "from revshellgen import main; print('✓ Package imports successfully')"
-    
-    - name: Test CLI entry point
-      run: |
-        pip install -e .
-        # Just check if the command exists and shows help
-        revshellgen --help || echo "✓ CLI entry point exists"
-
-  build:
-    name: Build Distribution
-    needs: test
+  build-and-publish:
+    name: Build and Publish to PyPI
     runs-on: ubuntu-latest
+    
+    permissions:
+      id-token: write  # Required for trusted publishing
+      contents: read
     
     steps:
     - uses: actions/checkout@v4
@@ -62,71 +22,18 @@ jobs:
       with:
         python-version: '3.11'
     
-    - name: Install build dependencies
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build wheel setuptools
+        pip install build wheel setuptools twine
     
     - name: Build package
       run: python -m build
     
     - name: Check distribution
       run: |
-        pip install twine
         twine check dist/*
         ls -lah dist/
-    
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: python-package-distributions
-        path: dist/
-
-  publish-to-testpypi:
-    name: Publish to TestPyPI
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/revshellgen
-    
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-    
-    steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: python-package-distributions
-        path: dist/
-    
-    - name: Publish to TestPyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: https://test.pypi.org/legacy/
-        skip-existing: true  # Skip if version already exists
-
-  publish-to-pypi:
-    name: Publish to PyPI
-    needs: build
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')  # Only on version tags
-    
-    environment:
-      name: pypi
-      url: https://pypi.org/p/revshellgen
-    
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-    
-    steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: python-package-distributions
-        path: dist/
     
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1

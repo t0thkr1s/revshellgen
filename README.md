@@ -41,7 +41,7 @@
 
 ## 🚀 Quick Start
 
-### Option 1: Install from PyPI (Coming Soon)
+### Option 1: Install from PyPI
 ```bash
 # Install from PyPI
 pip install revshellgen
