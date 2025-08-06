@@ -1,0 +1,8 @@
+include README.md
+include LICENSE
+include requirements.txt
+include requirements-minimal.txt
+recursive-include revshellgen/commands *
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store

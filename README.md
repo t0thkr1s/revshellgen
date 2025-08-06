@@ -37,6 +37,16 @@
 
 ## 🚀 Quick Start
 
+### Option 1: Install from PyPI (Coming Soon)
+```bash
+# Install from PyPI
+pip install revshellgen
+
+# Run the tool
+revshellgen
+```
+
+### Option 2: Install from Source
 ```bash
 # Clone the repository
 git clone https://github.com/t0thkr1s/revshellgen
@@ -46,7 +56,7 @@ cd revshellgen
 pip3 install -r requirements.txt
 
 # Run the tool
-python3 revshellgen.py
+python3 revshellgen.py  # or python3 revshellgen_cli.py
 ```
 
 ## 📦 Installation
