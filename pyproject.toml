@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "revshellgen"
-version = "2.0.0"
+version = "2.1.0"
 description = "Reverse Shell Generator - Automate reverse shell generation with style"
 readme = "README.md"
 authors = [

@@ -200,6 +200,9 @@ brew install nmap  # Includes ncat
 | **PHP** | PHP reverse shell | Cross-platform |
 | **Ruby** | Ruby-based reverse shell | Cross-platform |
 | **Java** | Java reverse shell | Cross-platform |
+| **AWK** | AWK reverse shell | Linux/Unix |
+| **Socat** | Socat reverse shell | Linux/Unix |
+| **Socat TTY** | Socat with full TTY | Linux/Unix |
 | **Telnet** | Telnet reverse shell | Linux/Unix |
 | **PowerShell** | Windows PowerShell | Windows |
 

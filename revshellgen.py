@@ -40,7 +40,10 @@ ip = port = shell = command = ''
 encode_types = ['NONE', 'URL ENCODE', 'BASE64 ENCODE']
 setup_or_not = ["yes","no"]
 shells = ['/bin/sh', '/bin/bash', '/bin/zsh', '/bin/ksh', '/bin/tcsh', '/bin/dash']
-commands = sorted([command for command in os.listdir(sys.path[0] + '/commands')])
+# Get the package directory
+package_dir = os.path.dirname(os.path.abspath(__file__))
+commands_dir = os.path.join(package_dir, 'commands')
+commands = sorted([command for command in os.listdir(commands_dir)])
 
 
 def print_banner():
@@ -136,7 +139,8 @@ def select_command():
 
 
 def select_shell():
-    if command not in ('windows_powershell', 'unix_bash', 'unix_telnet'):
+    # These commands have their own shell specifications
+    if command not in ('windows_powershell', 'unix_bash', 'unix_telnet', 'unix_awk'):
         print(header.safe_substitute(text='SELECT SHELL'))
         global shell
         shell = shells[(select(shells))]
@@ -144,7 +148,8 @@ def select_shell():
 
 def build_command():
     global command
-    with open(sys.path[0] + '/commands/' + command) as f:
+    command_path = os.path.join(commands_dir, command)
+    with open(command_path) as f:
         command = Template(f.read())
     command = command.safe_substitute(ip=ip, port=port, shell=shell)
     print(header.safe_substitute(text='SELECT ENCODE TYPE'))
@@ -318,7 +323,8 @@ def setup_listener():
             exit_program()
 
 
-if __name__ == '__main__':
+def main():
+    """Main entry point for the application."""
     print_banner()
     try:
         specify_ip()
@@ -329,3 +335,7 @@ if __name__ == '__main__':
         setup_listener()
     except KeyboardInterrupt:
         exit_program()
+
+
+if __name__ == '__main__':
+    main()
