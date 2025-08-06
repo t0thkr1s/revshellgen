@@ -9,6 +9,10 @@
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS-orange?style=for-the-badge)](https://github.com/t0thkr1s/revshellgen)
 [![Stars](https://img.shields.io/github/stars/t0thkr1s/revshellgen?style=for-the-badge)](https://github.com/t0thkr1s/revshellgen/stargazers)
 
+[![CI Tests](https://github.com/t0thkr1s/revshellgen/workflows/CI%20Tests/badge.svg)](https://github.com/t0thkr1s/revshellgen/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/revshellgen?style=flat-square)](https://pypi.org/project/revshellgen/)
+[![Downloads](https://img.shields.io/pypi/dm/revshellgen?style=flat-square)](https://pypi.org/project/revshellgen/)
+
 <p align="center">
   <b>Automate reverse shell generation with style</b><br>
   <i>Generate, encode, and catch reverse shells without the hassle</i>

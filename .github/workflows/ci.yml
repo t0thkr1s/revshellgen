@@ -1,0 +1,121 @@
+name: CI Tests
+
+on:
+  push:
+    branches: [ master, main, develop ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black isort mypy
+    
+    - name: Check code formatting with Black
+      run: |
+        black --check --diff revshellgen/ || echo "Code formatting issues found (non-blocking)"
+    
+    - name: Check import sorting with isort
+      run: |
+        isort --check-only --diff revshellgen/ || echo "Import sorting issues found (non-blocking)"
+    
+    - name: Lint with flake8
+      run: |
+        flake8 revshellgen/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 revshellgen/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+  test:
+    name: Test on ${{ matrix.os }} - Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install system dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xclip xsel
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Install package
+      run: |
+        pip install -e .
+    
+    - name: Run basic tests
+      run: |
+        # Test imports
+        python -c "from revshellgen import main"
+        python -c "from revshellgen import __version__"
+        
+        # Test if command templates exist
+        python -c "
+import os
+from revshellgen.main import commands_dir
+assert os.path.exists(commands_dir), 'Commands directory not found'
+assert len(os.listdir(commands_dir)) > 0, 'No command templates found'
+print(f'✓ Found {len(os.listdir(commands_dir))} command templates')
+"
+    
+    - name: Check CLI installation
+      run: |
+        which revshellgen
+        # The tool is interactive, so we can't fully test it in CI
+        # But we can check if it's installed correctly
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety
+    
+    - name: Security scan with Bandit
+      run: |
+        bandit -r revshellgen/ -f json -o bandit-report.json || true
+        if [ -f bandit-report.json ]; then
+          echo "Bandit security scan complete"
+        fi
+    
+    - name: Check dependencies with Safety
+      run: |
+        pip install -r requirements.txt
+        safety check --json || echo "Dependency vulnerabilities check complete"
