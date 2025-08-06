@@ -7,6 +7,7 @@ import platform
 import subprocess
 import urllib.parse 
 import base64
+import shutil
 from string import Template
 from typing import List
 
@@ -162,8 +163,134 @@ def build_command():
         copy(command)
         print(info.safe_substitute(text='Reverse shell command copied to clipboard!'))
 
-    print(success.safe_substitute(text='In case you want to upgrade your shell, you can use this:\n'))
+    # Display comprehensive TTY upgrade instructions
+    display_tty_upgrade_instructions()
+
+
+def display_tty_upgrade_instructions():
+    """Display comprehensive instructions for upgrading to a fully interactive TTY."""
+    print(header.safe_substitute(text='TTY UPGRADE INSTRUCTIONS'))
+    
+    # Get terminal dimensions
+    try:
+        cols, rows = shutil.get_terminal_size()
+    except:
+        cols, rows = 80, 24  # Default fallback
+    
+    print(info.safe_substitute(text='After getting a shell, follow these steps for a fully interactive TTY:\n'))
+    
+    # Step 1: Basic PTY spawn
+    print(success.safe_substitute(text='Step 1: Spawn a PTY shell (in reverse shell)'))
     print(code.safe_substitute(code="python -c 'import pty;pty.spawn(\"/bin/bash\")'"))
+    print("   OR")
+    print(code.safe_substitute(code="python3 -c 'import pty;pty.spawn(\"/bin/bash\")'"))
+    print("   OR")
+    print(code.safe_substitute(code="script -q /dev/null -c bash"))
+    print("   OR (for limited environments)")
+    print(code.safe_substitute(code="/usr/bin/script -qc /bin/bash /dev/null"))
+    print()
+    
+    # Step 2: Background the shell
+    print(success.safe_substitute(text='Step 2: Background the shell'))
+    print(code.safe_substitute(code="Press: Ctrl+Z"))
+    print(info.safe_substitute(text='This will return you to your local terminal'))
+    print()
+    
+    # Step 3: Get current terminal settings and set to raw mode
+    print(success.safe_substitute(text='Step 3: Note your terminal settings and set raw mode (in local terminal)'))
+    print(code.safe_substitute(code="stty -a  # Note the rows and columns values"))
+    print(code.safe_substitute(code="stty raw -echo; fg"))
+    print(info.safe_substitute(text='Note: After this, your terminal will look weird. Just continue typing.'))
+    print()
+    
+    # Step 4: Set terminal type and export variables
+    print(success.safe_substitute(text='Step 4: Configure the terminal (in reverse shell after fg)'))
+    print(info.safe_substitute(text='Type these commands even if you can\'t see them properly:'))
+    print(code.safe_substitute(code="reset"))
+    print(code.safe_substitute(code="export SHELL=bash"))
+    print(code.safe_substitute(code="export TERM=xterm-256color"))
+    print(code.safe_substitute(code=f"stty rows {rows} columns {cols}"))
+    print()
+    
+    # Alternative method for stubborn shells
+    print(success.safe_substitute(text='Alternative method (if above doesn\'t work):'))
+    print(code.safe_substitute(code="python3 -c 'import pty;pty.spawn(\"/bin/bash\")'"))
+    print(code.safe_substitute(code="export TERM=xterm"))
+    print(code.safe_substitute(code="stty sane"))
+    print(code.safe_substitute(code=f"stty rows {rows} cols {cols}"))
+    print()
+    
+    # Optional: Additional improvements
+    print(success.safe_substitute(text='Optional: Make your shell more comfortable'))
+    print(code.safe_substitute(code="export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"))
+    print(code.safe_substitute(code="alias ll='ls -la'"))
+    print(code.safe_substitute(code="alias la='ls -la'"))
+    print(code.safe_substitute(code="alias l='ls -la'"))
+    print(code.safe_substitute(code="clear"))
+    print()
+    
+    # Quick reference card
+    print(header.safe_substitute(text='QUICK REFERENCE CARD'))
+    quick_commands = f'''=== Quick Copy-Paste Sequence ===
+
+1. In reverse shell:
+   python3 -c 'import pty;pty.spawn("/bin/bash")'
+
+2. Press Ctrl+Z
+
+3. In your local terminal:
+   stty raw -echo; fg
+
+4. In reverse shell (type blindly if needed):
+   reset
+   export SHELL=bash TERM=xterm-256color
+   stty rows {rows} columns {cols}
+
+=== Your Terminal Info ===
+Rows: {rows}
+Columns: {cols}
+
+=== Troubleshooting ===
+- If backspace doesn't work: stty erase ^H
+- If delete doesn't work: stty erase ^?
+- If arrows don't work: export TERM=linux
+- To fix display issues: reset or clear'''
+    
+    print(code.safe_substitute(code=quick_commands))
+    
+    # Option to save instructions
+    save_tty_instructions(quick_commands, rows, cols)
+
+
+def save_tty_instructions(instructions, rows, cols):
+    """Offer to save TTY upgrade instructions to a file."""
+    print()
+    print(header.safe_substitute(text='SAVE INSTRUCTIONS'))
+    save_options = ["Save TTY upgrade instructions to file", "Continue without saving"]
+    
+    if select(save_options) == 0:
+        filename = f"tty_upgrade_{port}.txt"
+        try:
+            with open(filename, 'w') as f:
+                f.write("TTY UPGRADE INSTRUCTIONS\n")
+                f.write("========================\n\n")
+                f.write(f"Generated for connection on port {port}\n")
+                f.write(f"Terminal dimensions: {rows} rows x {cols} columns\n\n")
+                f.write(instructions)
+                f.write("\n\n" + "="*50 + "\n")
+                f.write("References:\n")
+                f.write("- https://blog.ropnop.com/upgrading-simple-shells-to-fully-interactive-ttys/\n")
+                f.write("- https://github.com/t0thkr1s/revshellgen\n")
+            print(success.safe_substitute(text=f'Instructions saved to {filename}'))
+            
+            # Also try to copy the quick commands to clipboard
+            try:
+                copy(instructions)
+                print(success.safe_substitute(text='Quick reference also copied to clipboard!'))
+            except:
+                pass
+        except Exception as e:
+            print(fail.safe_substitute(text=f'Could not save file: {e}'))
 
 
 def setup_listener():
