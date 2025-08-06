@@ -1,16 +1,13 @@
-### VirtualEnv template
-.Python
-[Bb]in
-[Ii]nclude
-[Ll]ib
-[Ll]ib64
-[Ll]ocal
-[Ss]cripts
-pyvenv.cfg
-.venv
-pip-selfcheck.json
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
 
 # Distribution / packaging
+.Python
 build/
 develop-eggs/
 dist/
@@ -28,32 +25,28 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
+PIPFILE.lock
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-
-# pyenv
-.python-version
-
-# Environments
-.env
-env/
+# Virtual environments
 venv/
 ENV/
-env.bak/
-venv.bak/
+env/
+.venv/
 
+# IDE specific files
 .idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# TTY upgrade instruction files (generated)
+tty_upgrade_*.txt
+
+# Test files
+test_*.py
+
+# Backup files
+*.bak
+*.backup

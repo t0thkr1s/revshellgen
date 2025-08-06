@@ -1,0 +1,14 @@
+# RevShellGen Requirements
+# Install with: pip3 install -r requirements.txt
+
+# Core dependencies
+pyperclip>=1.8.2        # Cross-platform clipboard operations
+colorama>=0.4.4         # Terminal color support for Windows/Unix
+readchar>=3.0.4         # Cross-platform single character input
+netifaces>=0.11.0       # Network interface information
+
+# Note: Python 3.6+ is required
+# Some systems may need additional packages:
+# - Linux: python3-dev, xclip or xsel (for clipboard support)
+# - macOS: No additional requirements
+# - Windows: No additional requirements

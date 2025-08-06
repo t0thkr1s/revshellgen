@@ -1,0 +1,6 @@
+# Minimal requirements without version constraints
+# Use this if you encounter version conflicts
+pyperclip
+colorama
+readchar
+netifaces

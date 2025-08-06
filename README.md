@@ -43,7 +43,7 @@ git clone https://github.com/t0thkr1s/revshellgen
 cd revshellgen
 
 # Install dependencies
-python3 setup.py install
+pip3 install -r requirements.txt
 
 # Run the tool
 python3 revshellgen.py
@@ -70,7 +70,17 @@ RevShellGen requires the following Python packages:
 ### Installation Methods
 
 <details>
-<summary><b>Method 1: Using setup.py (Recommended)</b></summary>
+<summary><b>Method 1: Using requirements.txt (Simplest)</b></summary>
+
+```bash
+git clone https://github.com/t0thkr1s/revshellgen
+cd revshellgen
+pip3 install -r requirements.txt
+```
+</details>
+
+<details>
+<summary><b>Method 2: Using setup.py (Traditional)</b></summary>
 
 ```bash
 git clone https://github.com/t0thkr1s/revshellgen
@@ -80,7 +90,19 @@ python3 setup.py install
 </details>
 
 <details>
-<summary><b>Method 2: Manual pip installation</b></summary>
+<summary><b>Method 3: Virtual environment (Recommended for isolation)</b></summary>
+
+```bash
+git clone https://github.com/t0thkr1s/revshellgen
+cd revshellgen
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip3 install -r requirements.txt
+```
+</details>
+
+<details>
+<summary><b>Method 4: Manual installation</b></summary>
 
 ```bash
 git clone https://github.com/t0thkr1s/revshellgen
@@ -90,14 +112,12 @@ pip3 install pyperclip colorama readchar netifaces
 </details>
 
 <details>
-<summary><b>Method 3: Virtual environment</b></summary>
+<summary><b>Method 5: User installation (no sudo required)</b></summary>
 
 ```bash
 git clone https://github.com/t0thkr1s/revshellgen
 cd revshellgen
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-python3 setup.py install
+pip3 install --user -r requirements.txt
 ```
 </details>
 
