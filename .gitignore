@@ -27,6 +27,10 @@ share/python-wheels/
 *.egg
 PIPFILE.lock
 
+# Build environments
+.build_env/
+test_install/
+
 # Virtual environments
 venv/
 ENV/

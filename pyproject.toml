@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools-scm"]
+requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,7 +10,7 @@ readme = "README.md"
 authors = [
     {name = "t0thkr1s", email = "t0thkr1s@icloud.com"}
 ]
-license = {text = "GPL-3.0"}
+license = {text = "GPL-3.0-or-later"}
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Information Technology",
@@ -35,3 +35,9 @@ Issues = "https://github.com/t0thkr1s/revshellgen/issues"
 
 [project.scripts]
 revshellgen = "revshellgen.main:main"
+
+[tool.setuptools]
+packages = ["revshellgen"]
+
+[tool.setuptools.package-data]
+revshellgen = ["commands/*"]
