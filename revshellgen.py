@@ -3,10 +3,12 @@
 import ipaddress
 import os
 import sys
+import platform
+import subprocess
 import urllib.parse 
 import base64
 from string import Template
-from typing import List 
+from typing import List
 
 import readchar
 from colorama import Fore, Style
@@ -168,7 +170,36 @@ def setup_listener():
     if os.name != 'nt':
         print(header.safe_substitute(text='SETUP LISTENER'))
         if select(setup_or_not) == 0:
-            os.system('\n$(which ncat || which nc) -nlvp ' + port)
+            # Detect the operating system and available netcat variant
+            system = platform.system()
+            
+            # Check for ncat first (works consistently across platforms)
+            ncat_path = subprocess.run(['which', 'ncat'], capture_output=True, text=True).stdout.strip()
+            nc_path = subprocess.run(['which', 'nc'], capture_output=True, text=True).stdout.strip()
+            
+            if ncat_path:
+                # Prefer ncat if available (from nmap package)
+                listener_cmd = f'{ncat_path} -nlvp {port}'
+                print(success.safe_substitute(text=f'Using ncat for listener on port {port}'))
+            elif system == 'Darwin':  # macOS
+                if nc_path:
+                    # macOS nc syntax is different: nc -l port
+                    listener_cmd = f'{nc_path} -l {port}'
+                    print(info.safe_substitute(text=f'Using macOS nc for listener on port {port}'))
+                else:
+                    print(fail.safe_substitute(text='No netcat found! Install ncat with: brew install nmap'))
+                    exit_program()
+            else:  # Linux and other Unix-like systems
+                if nc_path:
+                    # Traditional nc syntax
+                    listener_cmd = f'{nc_path} -nlvp {port}'
+                    print(success.safe_substitute(text=f'Using nc for listener on port {port}'))
+                else:
+                    print(fail.safe_substitute(text='No netcat found! Install nc or ncat.'))
+                    exit_program()
+            
+            # Execute the listener command
+            os.system('\n' + listener_cmd)
         else:
             exit_program()
 
