@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "revshellgen"
-version = "2.1.0"
+version = "2.2.0"
 description = "Reverse Shell Generator - Automate reverse shell generation with style"
 readme = "README.md"
 authors = [
@@ -20,7 +20,7 @@ classifiers = [
     "Operating System :: MacOS",
     "Programming Language :: Python :: 3",
 ]
-requires-python = ">=3.6"
+requires-python = ">=3.8"
 dependencies = [
     "pyperclip>=1.8.2",
     "colorama>=0.4.4",

@@ -47,7 +47,8 @@ commands = sorted([command for command in os.listdir(commands_dir)])
 
 
 def print_banner():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    # Clear screen using ANSI escape codes for better portability
+    print('\033[2J\033[H', end='')
     print(banner)
 
 
@@ -317,8 +318,12 @@ def setup_listener():
                     print(fail.safe_substitute(text='No netcat found! Install nc or ncat.'))
                     exit_program()
             
-            # Execute the listener command
-            os.system('\n' + listener_cmd)
+            # Execute the listener command using subprocess for better control
+            print()  # Add newline before running command
+            try:
+                subprocess.run(listener_cmd, shell=True)
+            except KeyboardInterrupt:
+                print("\n" + info.safe_substitute(text='Listener terminated.'))
         else:
             exit_program()
 
